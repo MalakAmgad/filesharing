@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  server1:
+    build: ./server1
+    container_name: server1
+    networks:
+      - cloudnet
+    volumes:
+      - shared_uploads:/app/uploads
+
+  server2:
+    build: ./server2
+    container_name: server2
+    networks:
+      - cloudnet
+    volumes:
+      - shared_uploads:/app/uploads
+
+  server3:
+    build: ./server3
+    container_name: server3
+    networks:
+      - cloudnet
+    volumes:
+      - shared_uploads:/app/uploads
+
+  load_balancer:
+    build: ./load_balancer
+    container_name: load_balancer
+    ports:
+      - "8080:5000"
+    depends_on:
+      - server1
+      - server2
+      - server3
+    networks:
+      - cloudnet
+
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "8081:5000"
+    networks:
+      - cloudnet
+    depends_on:
+      - load_balancer
+
+networks:
+  cloudnet:
+    driver: bridge
+
+volumes:
+  shared_uploads:
+    driver: local

@@ -1,0 +1,106 @@
+Here's a comprehensive set of tests to validate your cloud file sharing system's reliability and failover capabilities:
+
+### 🧪 Test Plan for High Availability System
+
+1. **Basic Functionality Tests**
+   - [ ] Upload a file through client interface → verify successful response
+   - [ ] Download the same file → verify content matches original
+   - [ ] Attempt to download non-existent file → verify proper error
+
+2. **Single Server Failure Tests**
+   - [ ] Kill server1 container (`docker stop server1`)
+   - [ ] Verify load balancer health check detects failure within 3 seconds
+   - [ ] Upload new file → should only use server2/server3
+   - [ ] Download previous files → should succeed (if file existed on surviving servers)
+
+3. **Cascading Failure Tests**
+   - [ ] Kill server2 container
+   - [ ] Verify system operates on single server (server3)
+   - [ ] Upload/download operations should still work
+   - [ ] Restart server1 → verify it rejoins healthy pool automatically
+
+4. **Complete Outage Test**
+   - [ ] Kill all servers
+   - [ ] Verify client receives "503 Service Unavailable"
+   - [ ] Restart one server → verify system resumes operations
+
+5. **Network Partition Test**
+   - [ ] Simulate network failure for server3:
+     ```bash
+     docker network disconnect cloudnet server3
+     ```
+   - [ ] Verify load balancer marks server3 as unhealthy
+   - [ ] Reconnect network and verify server3 rejoins
+
+6. **Load Balancing Verification**
+   - [ ] Check round-robin behavior:
+     ```bash
+     for i in {1..6}; do curl -X POST http://localhost:8080/upload -F "file=@test.txt"; done
+     ```
+   - [ ] Verify requests alternate between healthy servers
+
+7. **Data Persistence Test**
+   - [ ] Upload file to server1
+   - [ ] Kill server1 container
+   - [ ] Restart server1 with new container
+   - [ ] Verify previously uploaded file still exists
+
+8. **Stress Test**
+   - [ ] Simultaneous uploads from multiple clients:
+     ```bash
+     ab -n 100 -c 10 -p test.txt -T 'multipart/form-data; boundary=123' http://localhost:8080/upload
+     ```
+   - [ ] Monitor all servers remain responsive
+
+9. **Recovery Test**
+   - [ ] While system is under load, kill a server
+   - [ ] Verify requests continue being served by remaining servers
+   - [ ] Restart dead server → verify seamless reintegration
+
+10. **Configuration Test**
+    - [ ] Add server4 to docker-compose.yml
+    - [ ] Redeploy → verify load balancer automatically detects new server
+    - [ ] Remove server2 → verify clean removal from rotation
+
+### 🔧 Test Tools
+
+1. **Manual Testing**:
+   ```bash
+   # Check server status
+   curl http://localhost:8080/heartbeat
+   
+   # Force health check
+   watch -n 1 curl -s http://load_balancer:5000/heartbeat
+   ```
+
+2. **Automated Testing** (save as `test_script.sh`):
+   ```bash
+   #!/bin/bash
+   echo "Uploading test file..."
+   curl -X POST -F "file=@testfile.txt" http://localhost:8080/upload
+   
+   echo -e "\nKilling server1..."
+   docker stop server1
+   sleep 5  # Wait for health check
+   
+   echo -e "\nDownloading file..."
+   curl http://localhost:8080/download/testfile.txt --output downloaded.txt
+   
+   diff testfile.txt downloaded.txt && echo "Files match!" || echo "ERROR: Files differ!"
+   ```
+
+3. **Monitoring Dashboard**:
+   ```bash
+   watch -n 1 'echo "Healthy Servers:"; curl -s http://localhost:8080/heartbeat; 
+   echo -e "\nServer Logs:"; docker logs --tail 5 load_balancer'
+   ```
+
+### 📝 Expected Outcomes
+
+1. All uploads/downloads should succeed when at least one server is healthy
+2. No single server failure should impact availability
+3. System should automatically recover when servers come back online
+4. Clients should never receive partial/corrupted files
+5. Load balancer should immediately detect failures (max 3 second delay)
+
+Would you like me to add any specific test scenarios or create automated test scripts for any particular aspect? For example, we could build a Python test suite using pytest for comprehensive validation.
