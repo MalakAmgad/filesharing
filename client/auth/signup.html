@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-header">SIGN UP</div>
+      <div class="avatar">
+        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User Icon" />
+      </div>
+      
+      <!-- Flash messages display -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-message">
+            {{ messages[0] }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form id="signup-form" method="POST" action="{{ url_for('signup') }}">
+        <div class="input-group">
+          <input type="email" name="email" placeholder="Email" required />
+          <span class="icon">📧</span>
+        </div>
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Password" required />
+          <span class="icon">🔒</span>
+        </div>
+        <button type="submit">Create Account</button>
+        <p class="switch-page">Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+      </form>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

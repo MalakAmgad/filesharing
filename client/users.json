@@ -1,0 +1,8 @@
+{
+  "users": [
+    {
+      "email": "test@example.com",
+      "password_hash": "scrypt:32768:8:1$LrzMtBaWiTUohBsG$663c2596ceafc39b6957f82fcb0ad3491e12f2c24e211f7e2e30a411d328bd4061e55278b4f7e8ed67606f89d126d1c002a53b391f973ce9fd88fc9ff6fa5789"
+    }
+  ]
+}

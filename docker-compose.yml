@@ -1,5 +1,7 @@
 version: '3.8'
+
 services:
+  # Backend Servers (File operations only)
   server1:
     build: ./server1
     container_name: server1
@@ -7,6 +9,8 @@ services:
       - cloudnet
     volumes:
       - shared_uploads:/app/uploads
+    environment:
+      - FLASK_ENV=production
 
   server2:
     build: ./server2
@@ -15,6 +19,8 @@ services:
       - cloudnet
     volumes:
       - shared_uploads:/app/uploads
+    environment:
+      - FLASK_ENV=production
 
   server3:
     build: ./server3
@@ -23,28 +29,35 @@ services:
       - cloudnet
     volumes:
       - shared_uploads:/app/uploads
+    environment:
+      - FLASK_ENV=production
 
+  # Python Load Balancer
   load_balancer:
     build: ./load_balancer
     container_name: load_balancer
     ports:
-      - "8080:5000"
+      - "8080:5000"  # Keep as 5000 to match your Flask LB
+    networks:
+      - cloudnet
     depends_on:
       - server1
       - server2
       - server3
-    networks:
-      - cloudnet
 
+  # Authentication Client
   client:
     build: ./client
     container_name: client
     ports:
-      - "8081:5000"
+      - "8081:5000"  # Direct access for testing
+    volumes:
+      - ./client/users.json:/app/users.json
+      - shared_uploads:/app/uploads
+    environment:
+      - FLASK_SECRET_KEY= kgrgjkoOO0848HFJIDJCIo
     networks:
       - cloudnet
-    depends_on:
-      - load_balancer
 
 networks:
   cloudnet:
